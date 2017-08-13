@@ -4,6 +4,7 @@ import com.model.Weight;
 import org.bson.types.ObjectId;
 
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.dao.BasicDAO;
 
 import org.mongodb.morphia.query.Query;
@@ -22,6 +23,14 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
         super(entityClass, ds);
     }
 
+    public Weight create(Weight weight){
+        Key<Weight> key = save(weight);
+        /*System.out.println(key);*/
+
+        return get((ObjectId) key.getId());
+    }
+
+
     public List<Weight> getAllWeight(){
         QueryResults<Weight> resultWeights = find();
         List<Weight> weights = resultWeights.asList();
@@ -30,12 +39,12 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
 
     public List<Weight> getWeight(String fromStr, String toStr){
         List<Weight> response = null;
-        if(fromStr == null && toStr == null){
+        if(fromStr.equals("null") && toStr.equals(null)){
             response = getAllWeight();
         }else{
             response = getWeightInRange(fromStr, toStr);
         }
-        return getAllWeight();
+        return response;
     }
 
     /*
@@ -47,7 +56,7 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
         if(fromStr != null && toStr != null) {
             Date from = new Date(Long.parseLong(fromStr));
             Date to = new Date(Long.parseLong(toStr));
-            query = createQuery();
+            query = createQuery().disableValidation();
             query.and(
                     query.criteria(timeStamp).greaterThanOrEq(from),
                     query.criteria(timeStamp).lessThanOrEq(to)
@@ -56,16 +65,17 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
         }else{
             if(fromStr != null){
                 Date from = new Date(Long.parseLong(fromStr));
-                query = createQuery()
+                query = createQuery().disableValidation()
                         .field(timeStamp).greaterThanOrEq(from);
             }else{
                 Date to = new Date(Long.parseLong(toStr));
-                query = createQuery()
+                query = createQuery().disableValidation()
                         .field(timeStamp).lessThanOrEq(to);
             }
         }
-        System.out.println(query);
-        response = query.asList();
+
+        response = find(query).asList();
+
         return response;
     }
     //read, readByTimeRange
