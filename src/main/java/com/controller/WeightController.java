@@ -1,17 +1,13 @@
 package com.controller;
 
 import com.model.Weight;
-import com.service.MorphiaService;
 import com.service.WeightService;
-import org.mongodb.morphia.Key;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-
 
 /**
  * Created by Jigar on 8/12/2017.
@@ -20,14 +16,14 @@ import java.util.List;
 public class WeightController {
 
     static WeightService weightService;
-
     static{
-        weightService = new WeightService(Weight.class, new MorphiaService().getMetricStore());
+        weightService = WeightService.getInstance();
     }
 
     @RequestMapping(value="/weight", method= RequestMethod.POST)
-    public ResponseEntity<Void> addWeight(@RequestBody Weight weight){
-        Weight weight2 = weightService.create(weight);
+    public ResponseEntity<Void> addWeight(@RequestBody Weight weight, HttpServletRequest request) {
+        Weight weight2 = weightService.create(weight, request.getRemoteAddr());
+
         return new ResponseEntity<Void>( HttpStatus.OK);
     }
 

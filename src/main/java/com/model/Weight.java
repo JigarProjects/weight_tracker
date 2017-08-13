@@ -1,9 +1,7 @@
 package com.model;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import org.bson.types.ObjectId;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -16,7 +14,7 @@ import java.util.Date;
 public class Weight {
     @Id
     private ObjectId id;
-
+    private String sesonrIP;
     Date timeStamp;
     int value;
 
@@ -44,6 +42,13 @@ public class Weight {
         this.timeStamp = timestamp;
     }
 
+    public String getSesonrIP() {
+        return sesonrIP;
+    }
+
+    public void setSesonrIP(String sesonrIP) {
+        this.sesonrIP = sesonrIP;
+    }
     @Override
     public String toString() {
         return "ts "+timeStamp+" "+value;

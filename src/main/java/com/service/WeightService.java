@@ -1,12 +1,11 @@
 package com.service;
 
+import com.model.Sensor;
 import com.model.Weight;
 import org.bson.types.ObjectId;
-
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.dao.BasicDAO;
-
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryResults;
 
@@ -17,21 +16,33 @@ import java.util.List;
  * Created by Jigar on 8/12/2017.
  */
 public class WeightService extends BasicDAO<Weight, ObjectId> {
+    private static WeightService weightService;
+    private final String timeStamp = "timeStamp";
 
-    String timeStamp = "timeStamp";
-    public WeightService(Class<Weight> entityClass, Datastore ds) {
+    private WeightService(Class<Weight> entityClass, Datastore ds) {
         super(entityClass, ds);
     }
 
-    public Weight create(Weight weight){
-        Key<Weight> key = save(weight);
-        /*System.out.println(key);*/
-
-        return get((ObjectId) key.getId());
+    public static WeightService getInstance() {
+        if (weightService == null) {
+            weightService = new WeightService(Weight.class, MorphiaService.getInstance().getMetricStore());
+        }
+        return weightService;
     }
 
+    public Weight create(Weight weight, String remoteAddr) {
+        weight.setSesonrIP(remoteAddr);
 
-    public List<Weight> getAllWeight(){
+        Key<Weight> key = save(weight);
+        Weight currentWeight = get((ObjectId) key.getId());
+        Sensor sensorInformation = SensorService.getInstance().addSensorInformation(remoteAddr, weight.getValue());
+        //check rule
+        MorphiaService.getInstance().executerWeightRule(remoteAddr, sensorInformation.getBaseWeight(), currentWeight);
+
+        return currentWeight;
+    }
+
+    public List<Weight> read() {
         QueryResults<Weight> resultWeights = find();
         List<Weight> weights = resultWeights.asList();
         return weights;
@@ -39,10 +50,10 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
 
     public List<Weight> getWeight(String fromStr, String toStr){
         List<Weight> response = null;
-        if(fromStr.equals("null") && toStr.equals(null)){
-            response = getAllWeight();
+        if (fromStr == null && toStr == null) {
+            response = read();
         }else{
-            response = getWeightInRange(fromStr, toStr);
+            response = readByTimeRange(fromStr, toStr);
         }
         return response;
     }
@@ -50,7 +61,7 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
     /*
         Create query as per supplied arguments.
      */
-    public List<Weight> getWeightInRange(String fromStr, String toStr){
+    public List<Weight> readByTimeRange(String fromStr, String toStr) {
         List<Weight> response;
         Query<Weight> query;
         if(fromStr != null && toStr != null) {
@@ -78,5 +89,4 @@ public class WeightService extends BasicDAO<Weight, ObjectId> {
 
         return response;
     }
-    //read, readByTimeRange
 }
